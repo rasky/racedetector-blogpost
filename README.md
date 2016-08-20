@@ -1,46 +1,42 @@
 ## Introduzione
 
-Uno dei punti di forza di Go è la sua ricca toolchain, che integra moltissime funzionalità
+Uno dei punti di forza di Go è la sua **ricca toolchain**, che integra moltissime funzionalità
 quali un sistema di build, un package manager, un driver di testsuite, un profiler, e
-molto altro ancora. Avere una toolchain così ricca e mantenuta assieme al linguaggio stesso
-permette all'intero ecosistema di librerie e applicazioni Go di avere un comportamento
-predefinito e standard, per cui se modificate una base di codice scritta da un collega o
-scaricata da Internet, non c'è bisogno di documentarsi su come scrivere un test o eseguire
-la testsuite, perché tutti i programmi in Go usano la stessa struttura per la scrittura
-dei test.
+molto altro ancora.
 
-Il race detector è una delle funzionalità più avanzate presenti nella toolchain di Go,
+Il **race detector** è una delle funzionalità più avanzate presenti nella toolchain di Go,
 che (come vedremo) è utilissimo per debuggare problemi di concorrenza e locking.
 Come probabilmente già sapete, Go è conosciuto per il potente supporto alla programmazione
 concorrente (basato sulla scrittura di codice in stile "bloccante" che diventa
 automaticamente asincrono grazie alle coroutine gestite dal runtime), e di conseguenza
 molti programmi scritti in Go tendono a beneficiare di questo supporto, eseguendo decine
-o anche migliaia di goroutine. Il race detector è pensato per facilitare il debugging
-del codice Go.
+o anche **migliaia di goroutine**. Il race detector è pensato per facilitare il debugging
+di software concorrente, aiutandovi ad **identificare le race condition** che possono
+avvenire tipicamente come risultato di tipici bug quali la mancanza di un mutex.
 
 ## La concorrenza e lo stato condiviso
 
-Go utilizza un modello di memoria condiviso per le goroutine, essattamente come in C++
+Go utilizza un **modello di memoria condiviso** per le goroutine, essattamente come in C++
 o Python per i thread; ciò vuol dire che ogni goroutine ha accesso a tutta la memoria
 del processo all'intero del quale gira,
 ed è quindi necessaria qualche cautela nell'accedere e modificare lo stato condiviso.
-Tipicamente, questo vuol dire usare primitive di sincronizzazione come semafori o mutex,
+Tipicamente, questo vuol dire usare **primitive di sincronizzazione** come semafori o mutex,
 oppure usufruire delle istruzioni speciali di accesso atomico alla memoria disponibili
 nella maggior parte dei processori.
 
 Dimenticarsi di effettuare un lock nel punto giusto è una fonte di bug tra i più
 insidiosi: il programma infatti può apparentemente funzionare normalmente durante
-lo sviluppo, o anche alle prime prove in produzione, ma poi avere d'improvviso
-comportamente strani di difficile riproduzione, causando degli [heisenbug](https://it.wikipedia.org/wiki/Heisenbug)
+lo sviluppo, o anche alle prime prove in produzione, ma poi rischia di avere
+**comportamenti imprevedibili** di difficile riproduzione, causando degli [heisenbug](https://it.wikipedia.org/wiki/Heisenbug)
 fastidiosissimi. Purtroppo, nella stragrande maggioranza dei casi, i programmatori
-non hanno strumenti che li aiutino ad accorgersi di questi problemi, e la correttezza
+non hanno strumenti a disposizione che li aiutino ad accorgersi di questi problemi, e la correttezza
 del codice è quindi affidata alla bravura e all'attenzione di chi scrive il codice
 e di chi lo modifica. E vi posso assicurare che ho visto bug del genere nel codice
 scritto da programmatori molto, molto esperti!
 
 Il problema è sicuramente insidioso di per sé, ed in un certo senso è anche acutizzato
 da un linguaggio con un potente e veloce supporto alla concorrenza come Go. In Go
-è così facile ed efficiente scrivere codice concorrente, che è normale abusarne molto
+è così **facile ed efficiente scrivere codice concorrente**, che è normale abusarne molto
 più che in altri linguaggi, e questo rischia di innescare una spirale negativa che
 allontana sempre di più la correttezza del codice... se non fosse che gli autori
 di Go hanno pensato di aiutare i programmatori e fornire un potentissimo race detector
@@ -49,11 +45,12 @@ a pochi tasti di distanza.
 
 ## Esempio: contatore condiviso
 
-Scriviamo un primo esempio di codice: un semplice programma Go che espone un server TCP
-e conta il numero di client che si collegano. Scrivo il codice in modo un po' più
-ricco del minimo indispensabile perché voglio mostrare un caso realistico: implemento
-quindi una classe `Server` con un metodo bloccante `Serve`, e un metodo `handleClient`
-che viene chiamato per ogni client che si connette, in una goroutine separata.
+Prendiamo come esempio un semplice programma Go [counter.go](counter.go) che espone un server TCP
+e conta il numero di client che si collegano. Il codice che riporto è stato scritto
+in modo un po' più ricco del minimo indispensabile, perché voglio mostrare un caso
+realistico: ho implementato quindi una classe `Server` con un metodo bloccante
+`Serve`, e un metodo `handleClient` che viene chiamato per ogni client che si connette,
+in una goroutine separata.
 
 ```go
 // counter.go: simple race detection example
@@ -171,7 +168,7 @@ Goroutine 7 (finished) created at:
 ```
 
 Come vedete il race detector ha individuato una data race: si è accorto cioè che due
-goroutine hanno effettuato una scrittura e una lettura alla stessa locazione di memoria
+goroutine hanno effettuato **una scrittura e una lettura alla stessa locazione di memoria**
 (in questo caso: `0x00c420086190`) senza che ci fosse tra loro una sincronizzazione
 esplicita, e ci mostra lo stack-trace di ciascuna lettura/scrittura, ci dà l'ID di
 ciascuna goroutine, e ci dà anche lo stack-trace di creazione di ciasuna goroutine.
@@ -190,8 +187,8 @@ della variabile `numClients` e la lettura che ne viene fatta per stampare il val
 in potenziale conflitto tra loro. Infatti, non esistono sincronizzazioni tra questi due
 statement.
 
-E' importante notare che il race detector si è accorto del problema nonostante le nostre
-connessioni telnet fossere completamente sequenziali e non parallele. In altre parole,
+E' importante notare che il race detector si è accorto del problema **nonostante le nostre
+connessioni telnet fossere completamente sequenziali** e non parallele. In altre parole,
 il race detector è in grado di identificare problemi di concorrenza **senza che questi
 si verifichino davvero**. Non è quindi necessario affidarsi ai proverbiali santi e sperare
 che il problema si verifichi mentre il race detector è attivo: è sufficiente eseguire il
@@ -201,9 +198,9 @@ suo lavoro.
 
 ## Come risolvere una data race
 
-Come risolvere il problema identificato dal race detector? Un primo approccio può essere quello di introdurre un mutex
-per sincronizzare tra loro gli accessi. Questo è un estratto di "counter_mutex.go" che
-mostra come viene introdotto il mutex:
+Come risolvere il problema identificato dal race detector? Un primo approccio può essere quello di
+**introdurre un mutex** per sincronizzare tra loro gli accessi. Questo è un estratto di
+[counter_mutex.go](mutex/counter_mutex.go) che mostra come viene introdotto il mutex:
 
 ```go
 [...]
@@ -233,14 +230,19 @@ func (srv *Server) handleClient(conn net.Conn) {
 
 Se provate ad eseguire ora il programma tramite `go run -race counter_mutex.go` e provate
 ad effettuare connessioni successive, vedrete che il race detector non si lamenterà più
-del problema. Nella scrittura del codice, è sempre bene tenere i lock per il minor tempo
-possibile, e infatti ho preferito isolare la lettura dello stato condiviso in uno statement
+del problema. Per maggiori informazioni sull'uso dei mutex, potete leggere la documentazione
+di [sync.Mutex](https://golang.org/pkg/sync/#Mutex). Ci sono anche altre primitive di sincronizzazione
+a disposizione, come per esempio [sync.RWMutex](https://golang.org/pkg/sync/#RWMutex) o
+[sync.Once](https://golang.org/pkg/sync/#Once).
+
+Un piccolo suggerimento su questo argomento: nella scrittura del codice, è sempre bene tenere i lock
+per il minor tempo possibile, e infatti ho preferito isolare la lettura dello stato condiviso in uno statement
 separato, evitando di effettuare il lock intorno alla `io.WriteString`, che lo avrebbe
 mantenuto bloccato anche durante l'intero I/O di rete.
 
 Un altro approccio possibile in questo specifico caso, trattandosi di una concorrenza su una semplice
 variabile di tipo integere, è quello di utilizzare le istruzioni atomiche del processore. Questo l'estratto
-di `counter_atomic.go` che mostra come fare:
+di [counter_atomic.go](atomic/counter_atomic.go) che mostra come fare:
 
 ```go
 [...]
@@ -263,11 +265,13 @@ func (srv *Server) handleClient(conn net.Conn) {
 [...]
 ```
 
-In questo caso, abbiamo utilizzato la funzione `atomic.AddInt64` per effettuare un incremento atomico,
-mentre la lettura atomico è demandata a `atomic.LoadInt64`. Gli accessi atomici sono un'alternativa
+In questo caso, abbiamo utilizzato la funzione [`atomic.AddInt64`](https://golang.org/pkg/sync/atomic/#AddInt64)
+per effettuare un incremento atomico, mentre la lettura atomico è demandata a
+[`atomic.LoadInt64`](https://golang.org/pkg/sync/atomic/#LoadInt64). Gli accessi atomici sono un'alternativa
 interessante ai mutex perché sono molto più veloci anche perché non causano context-switch. Si tratta
 però primitive un po' complesse da usare, per cui è meglio utilizzarle solo laddove si misurino
-effettivi problemi di performance (condizione spesso rara).
+effettivi problemi di performance (condizione spesso rara); per maggiori informazioni, potete leggere
+la documentazione del package [sync/atomic](https://golang.org/pkg/sync/atomic/).
 
 Interessante anche notare la potenza del race detector in questo caso: se proviamo a lasciare la
 `atomic.AddInt64` ma togliere la `atomic.LoadInt64`, viene comunque segnalata una data race. Questo
@@ -286,7 +290,8 @@ con due diversi accessi alla memoria, e quindi in modo non atomico.
 Testare a mano un server TCP può essere un compito alquanto tedioso, e, si sa, i programmatori sono
 tra i professionisti più pigri su questo pianeta. E' quindi sempre consigliato avere a disposizione
 una testsuite automatizzata, e Go ci aiuta fornendoci delle librerie e un comodo supporto integrato
-nella toolchain. Vediamo come scrivere un semplice test del nostro server:
+nella toolchain. Vediamo come scrivere un semplice test del nostro server: questo è il contenuto
+di [counter_test.go](counter_test.go).
 
 ```go
 // counter_test.go
