@@ -288,7 +288,7 @@ tra i professionisti più pigri su questo pianeta. E' quindi sempre consigliato 
 una testsuite automatizzata, e Go ci aiuta fornendoci delle librerie e un comodo supporto integrato
 nella toolchain. Vediamo come scrivere un semplice test del nostro server:
 
-```
+```go
 // counter_test.go
 package main
 
@@ -375,12 +375,26 @@ durante l'esecuzione. Anche se quindi la data race non ha causato di per sé un
 malfunzionamento tale da far fallire il test, Go ci suggerisce che ci sono comunque
 problemi importanti rilevati dalla testsuite da sistemare.
 
-E' buona norma utilizzare un sistema di continuous integration come (Travis CI)[http://travis-ci.org] o
-(Circle CI)[http://www.circleci.com] per eseguire la testsuite su ogni commit effettuato
+E' buona norma utilizzare un sistema di continuous integration come [Travis CI](http://travis-ci.org) o
+[Circle CI](http://www.circleci.com) per eseguire la testsuite su ogni commit effettuato
 dal team. In questo caso, per i software Go, conviene che il CI esegua sempre la testsuite
 tramite `go test -race`, in modo da accorgersi quanto prima possibile di problemi di
 concorrenza.
 
+## Conclusione
 
+Il race detector è quindi un'arma molto importante nell'arsenale di ogni programmatore,
+e i programmotri Go possono dormire sogni tranquilli sapendo di averne uno così potente
+perfettamente integrato nella toolchain standard e a disposizione in ogni momento.
 
+Il race detector è disponibile ad oggi solo su architetture a 64-bit; se quindi utilizzate
+Go per fare compilazione su sistemi embedded a 32-bit quali quelli ARM, non potrete purtroppo
+eseguire il race detector nativamente sul dispositivo target. In questo caso, consiglio
+sempre di mantenere fin dall'inizio dello sviluppo la possibilità di eseguire il programma
+(o almeno una parte significativa dello stesso) sul vostro sistema di sviluppo, in modo da
+poter beneficiare di questa e numerosi altre funzionalità senza dover ogni volta passare
+dall'esecuzione sul target.
+
+Se volete avere più informazioni sul race detector, potete continuare la lettura
+nella [documentazione ufficiale](https://golang.org/doc/articles/race_detector.html).
 
