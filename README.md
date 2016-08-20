@@ -45,7 +45,7 @@ a pochi tasti di distanza.
 
 ## Esempio: contatore condiviso
 
-Prendiamo come esempio un semplice programma Go [counter.go](counter.go) che espone un server TCP
+Prendiamo come esempio un semplice programma Go [`counter.go`](counter.go) che espone un server TCP
 e conta il numero di client che si collegano. Il codice che riporto è stato scritto
 in modo un po' più ricco del minimo indispensabile, perché voglio mostrare un caso
 realistico: ho implementato quindi una classe `Server` con un metodo bloccante
@@ -200,7 +200,7 @@ suo lavoro.
 
 Come risolvere il problema identificato dal race detector? Un primo approccio può essere quello di
 **introdurre un mutex** per sincronizzare tra loro gli accessi. Questo è un estratto di
-[counter_mutex.go](mutex/counter_mutex.go) che mostra come viene introdotto il mutex:
+[`counter_mutex.go`](mutex/counter_mutex.go) che mostra come viene introdotto il mutex:
 
 ```go
 [...]
@@ -231,9 +231,9 @@ func (srv *Server) handleClient(conn net.Conn) {
 Se provate ad eseguire ora il programma tramite `go run -race counter_mutex.go` e provate
 ad effettuare connessioni successive, vedrete che il race detector non si lamenterà più
 del problema. Per maggiori informazioni sull'uso dei mutex, potete leggere la documentazione
-di [sync.Mutex](https://golang.org/pkg/sync/#Mutex). Ci sono anche altre primitive di sincronizzazione
-a disposizione, come per esempio [sync.RWMutex](https://golang.org/pkg/sync/#RWMutex) o
-[sync.Once](https://golang.org/pkg/sync/#Once).
+di [`sync.Mutex`](https://golang.org/pkg/sync/#Mutex). Ci sono anche altre primitive di sincronizzazione
+a disposizione, come per esempio [`sync.RWMutex`](https://golang.org/pkg/sync/#RWMutex) o
+[`sync.Once`](https://golang.org/pkg/sync/#Once).
 
 Un piccolo suggerimento su questo argomento: nella scrittura del codice, è sempre bene tenere i lock
 per il minor tempo possibile, e infatti ho preferito isolare la lettura dello stato condiviso in uno statement
@@ -242,7 +242,7 @@ mantenuto bloccato anche durante l'intero I/O di rete.
 
 Un altro approccio possibile in questo specifico caso, trattandosi di una concorrenza su una semplice
 variabile di tipo integere, è quello di utilizzare le istruzioni atomiche del processore. Questo l'estratto
-di [counter_atomic.go](atomic/counter_atomic.go) che mostra come fare:
+di [`counter_atomic.go`](atomic/counter_atomic.go) che mostra come fare:
 
 ```go
 [...]
@@ -271,7 +271,7 @@ per effettuare un incremento atomico, mentre la lettura atomico è demandata a
 interessante ai mutex perché sono molto più veloci anche perché non causano context-switch. Si tratta
 però primitive un po' complesse da usare, per cui è meglio utilizzarle solo laddove si misurino
 effettivi problemi di performance (condizione spesso rara); per maggiori informazioni, potete leggere
-la documentazione del package [sync/atomic](https://golang.org/pkg/sync/atomic/).
+la documentazione del package [`sync/atomic`](https://golang.org/pkg/sync/atomic/).
 
 Interessante anche notare la potenza del race detector in questo caso: se proviamo a lasciare la
 `atomic.AddInt64` ma togliere la `atomic.LoadInt64`, viene comunque segnalata una data race. Questo
@@ -291,7 +291,7 @@ Testare a mano un server TCP può essere un compito alquanto tedioso, e, si sa, 
 tra i professionisti più pigri su questo pianeta. E' quindi sempre consigliato avere a disposizione
 una testsuite automatizzata, e Go ci aiuta fornendoci delle librerie e un comodo supporto integrato
 nella toolchain. Vediamo come scrivere un semplice test del nostro server: questo è il contenuto
-di [counter_test.go](counter_test.go).
+di [`counter_test.go`](counter_test.go).
 
 ```go
 // counter_test.go
