@@ -39,6 +39,10 @@ func (srv *Server) Serve() {
 	}
 }
 
+func (srv *Server) Close() {
+	srv.conn.Close()
+}
+
 // handleClient manages the communication with a single client.
 // In this example, we just send a predefined message and close the door
 func (srv *Server) handleClient(conn net.Conn) {

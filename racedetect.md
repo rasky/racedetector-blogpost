@@ -272,12 +272,115 @@ effettivi problemi di performance (condizione spesso rara).
 Interessante anche notare la potenza del race detector in questo caso: se proviamo a lasciare la
 `atomic.AddInt64` ma togliere la `atomic.LoadInt64`, viene comunque segnalata una data race. Questo
 può sembrare ovvio inizialmente, ma in realtà **non lo è affatto**: infatti, su x86-64, mentre la
-`atomic.AddInt64` è implementata tramite una istruzione assembly speciale (LOCK XADDQ), la
+`atomic.AddInt64` è implementata tramite una istruzione assembly speciale (`LOCK XADDQ`), la
 `atomic.LoadInt64` non è altro che un normale accesso alla memoria, perché l'architettura x86-64
 garantisce che le lettura a 64-bit dalla memoria siano già atomiche. Di conseguenza, il race
 detector non solo ci sta segnalando una potenziale data race, ma addirittura una data race
 che si può verificare **solo su architetture diverse da quella in cui viene eseguito**, come
 per esempio ARM32, in cui la lettura di una variabile a 64-bit deve necessariamente avvenire
 con due diversi accessi alla memoria, e quindi in modo non atomico.
+
+
+## Integrazione con la testsuite
+
+Testare a mano un server TCP può essere un compito alquanto tedioso, e, si sa, i programmatori sono
+tra i professionisti più pigri su questo pianeta. E' quindi sempre consigliato avere a disposizione
+una testsuite automatizzata, e Go ci aiuta fornendoci delle librerie e un comodo supporto integrato
+nella toolchain. Vediamo come scrivere un semplice test del nostro server:
+
+```
+// counter_test.go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"net"
+	"strings"
+	"testing"
+)
+
+func TestServer(t *testing.T) {
+	srv, err := NewServer("tcp", "localhost:2380")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	go srv.Serve()
+	defer srv.Close()
+
+	for i := 0; i < 5; i++ {
+		c, err := net.Dial("tcp", "localhost:2380")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer c.Close()
+
+		line, err := bufio.NewReader(c).ReadString('\n')
+		if err != nil || !strings.Contains(line, fmt.Sprintf("#%d ", i+1)) {
+			t.Errorf("invalid text received: %q (err:%v)", line, err)
+			return
+		}
+	}
+}
+```
+
+Per eseguire questo test, è sufficente lanciare `go test` nella directory del progetto. Ovviamente,
+la versione con data race sembrerà funzionare perfettamente:
+
+```
+$ go test
+PASS
+ok     	_/Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d 	0.016s
+```
+
+Ma anche qui, è sufficiente aggiungere `-race` per accorgersi del problema:
+
+```
+$ go test -race
+==================
+WARNING: DATA RACE
+Write at 0x00c420082190 by goroutine 8:
+  _/Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d.(*Server).Serve()
+      /Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d/counter.go:37 +0xae
+
+Previous read at 0x00c420082190 by goroutine 10:
+  runtime.convT2E()
+      /usr/local/Cellar/go/1.7/libexec/src/runtime/iface.go:155 +0x0
+  _/Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d.(*Server).handleClient()
+      /Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d/counter.go:49 +0x69
+
+Goroutine 8 (running) created at:
+  _/Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d.TestServer()
+      /Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d/counter_test.go:18 +0xe4
+  testing.tRunner()
+      /usr/local/Cellar/go/1.7/libexec/src/testing/testing.go:610 +0xc9
+
+Goroutine 10 (finished) created at:
+  _/Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d.(*Server).Serve()
+      /Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d/counter.go:38 +0xf0
+==================
+PASS
+2016/08/20 17:30:32 accept tcp 127.0.0.1:2380: use of closed network connection
+Found 1 data race(s)
+exit status 66
+FAIL   	_/Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d 	1.029s
+```
+
+Come potete vedere, il test in sé è passato (`PASS`) perché non è stata invocata una
+funziona della libreria di test per marcare un errore (come per esempio `t.Error`), ma
+l'intera testsuite viene marcata come `FAIL` perché è stata trovata una data race
+durante l'esecuzione. Anche se quindi la data race non ha causato di per sé un
+malfunzionamento tale da far fallire il test, Go ci suggerisce che ci sono comunque
+problemi importanti rilevati dalla testsuite da sistemare.
+
+E' buona norma utilizzare un sistema di continuous integration come (Travis CI)[http://travis-ci.org] o
+(Circle CI)[http://www.circleci.com] per eseguire la testsuite su ogni commit effettuato
+dal team. In questo caso, per i software Go, conviene che il CI esegua sempre la testsuite
+tramite `go test -race`, in modo da accorgersi quanto prima possibile di problemi di
+concorrenza.
+
+
 
 
