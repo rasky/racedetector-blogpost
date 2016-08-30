@@ -6,7 +6,7 @@ molto altro ancora.
 
 Il **race detector** è una delle funzionalità più avanzate presenti nella toolchain di Go,
 che (come vedremo) è utilissimo per debuggare problemi di concorrenza e locking.
-Come probabilmente già sapete, Go è conosciuto per il potente supporto alla programmazione
+Come probabilmente già sapete, Go è conosciuto per il [potente supporto alla programmazione](https://www.develer.com/blog/concurrency-in-go)
 concorrente (basato sulla scrittura di codice in stile "bloccante" che diventa
 automaticamente asincrono grazie alle coroutine gestite dal runtime), e di conseguenza
 molti programmi scritti in Go tendono a beneficiare di questo supporto, eseguendo decine
