@@ -1,7 +1,7 @@
 ## Introduzione
 
 Uno dei punti di forza di Go è la sua **ricca toolchain**, che integra moltissime funzionalità
-quali un sistema di build, un package manager, un driver di testsuite, un profiler, e
+quali un sistema di build, un package manager, un sistema per test automatizzati, un profiler, e
 molto altro ancora.
 
 Il **race detector** è una delle funzionalità più avanzate presenti nella toolchain di Go,
@@ -16,9 +16,9 @@ avvenire tipicamente come risultato di tipici bug quali la mancanza di un mutex.
 
 ## La concorrenza e lo stato condiviso
 
-Go utilizza un **modello di memoria condiviso** per le goroutine, essattamente come in C++
+Go utilizza un **modello di memoria condiviso** per le goroutine, esattamente come in C++
 o Python per i thread; ciò vuol dire che ogni goroutine ha accesso a tutta la memoria
-del processo all'intero del quale gira,
+del processo all'interno del quale gira,
 ed è quindi necessaria qualche cautela nell'accedere e modificare lo stato condiviso.
 Tipicamente, questo vuol dire usare **primitive di sincronizzazione** come semafori o mutex,
 oppure usufruire delle istruzioni speciali di accesso atomico alla memoria disponibili
@@ -178,21 +178,21 @@ In questo caso, parafrasando quanto scritto sopra, si può dire che:
  * La goroutine "main" (quella di avvio del programma) ha effettuato una scrittura
    alla riga `counter.go:37`
  * La goroutine 7 ha effettuato una lettura alla stessa locazione di memoria da dentro
-   il runtime di Go, ma lo stack trace ci indica che questo è stato comunque invocato
+   il runtime di Go, ma lo stack trace ci indica che la chiamata è stata comunque generata
    dal nostro codice alla riga `counter.go:45`
  * La goroutine 7 è stata creata alla posizione `counter.go:38`.
 
-Se guardiamo quindi il codice, vediamo che il race detector ci avverete che l'incremento
-della variabile `numClients` e la lettura che ne viene fatta per stampare il valoro sono
+Se guardiamo quindi il codice, vediamo che il race detector ci avverte che l'incremento
+della variabile `numClients` e la lettura che ne viene fatta per stampare il valore sono
 in potenziale conflitto tra loro. Infatti, non esistono sincronizzazioni tra questi due
 statement.
 
 E' importante notare che il race detector si è accorto del problema **nonostante le nostre
-connessioni telnet fossere completamente sequenziali** e non parallele. In altre parole,
+connessioni telnet fossero completamente sequenziali** e non parallele. In altre parole,
 il race detector è in grado di identificare problemi di concorrenza **senza che questi
 si verifichino davvero**. Non è quindi necessario affidarsi ai proverbiali santi e sperare
 che il problema si verifichi mentre il race detector è attivo: è sufficiente eseguire il
-codice da testare in una condizioni semi-realistica e il race detector farà comunque il
+codice da testare in una condizione semi-realistica e il race detector farà comunque il
 suo lavoro.
 
 
@@ -241,7 +241,7 @@ separato, evitando di effettuare il lock intorno alla `io.WriteString`, che lo a
 mantenuto bloccato anche durante l'intero I/O di rete.
 
 Un altro approccio possibile in questo specifico caso, trattandosi di una concorrenza su una semplice
-variabile di tipo integere, è quello di utilizzare le istruzioni atomiche del processore. Questo l'estratto
+variabile di tipo integer, è quello di utilizzare le istruzioni atomiche del processore. Questo l'estratto
 di [`counter_atomic.go`](atomic/counter_atomic.go) che mostra come fare:
 
 ```go
@@ -266,10 +266,10 @@ func (srv *Server) handleClient(conn net.Conn) {
 ```
 
 In questo caso, abbiamo utilizzato la funzione [`atomic.AddInt64`](https://golang.org/pkg/sync/atomic/#AddInt64)
-per effettuare un incremento atomico, mentre la lettura atomico è demandata a
+per effettuare un incremento atomico, mentre la lettura atomica è demandata a
 [`atomic.LoadInt64`](https://golang.org/pkg/sync/atomic/#LoadInt64). Gli accessi atomici sono un'alternativa
 interessante ai mutex perché sono molto più veloci anche perché non causano context-switch. Si tratta
-però primitive un po' complesse da usare, per cui è meglio utilizzarle solo laddove si misurino
+però di primitive un po' complesse da usare, per cui è meglio utilizzarle solo laddove si misurino
 effettivi problemi di performance (condizione spesso rara); per maggiori informazioni, potete leggere
 la documentazione del package [`sync/atomic`](https://golang.org/pkg/sync/atomic/).
 
@@ -374,7 +374,7 @@ FAIL   	_/Users/rasky/Sources/develer/e4daef8b5f9770c38439bf2310bc7b5d 	1.029s
 ```
 
 Come potete vedere, il test in sé è passato (`PASS`) perché non è stata invocata una
-funziona della libreria di test per marcare un errore (come per esempio `t.Error`), ma
+funzione della libreria di test per marcare un errore (come per esempio `t.Error`), ma
 l'intera testsuite viene marcata come `FAIL` perché è stata trovata una data race
 durante l'esecuzione. Anche se quindi la data race non ha causato di per sé un
 malfunzionamento tale da far fallire il test, Go ci suggerisce che ci sono comunque
@@ -389,7 +389,7 @@ concorrenza.
 ## Conclusione
 
 Il race detector è quindi un'arma molto importante nell'arsenale di ogni programmatore,
-e i programmotri Go possono dormire sogni tranquilli sapendo di averne uno così potente
+e i programmatori Go possono dormire sogni tranquilli sapendo di averne uno così potente
 perfettamente integrato nella toolchain standard e a disposizione in ogni momento.
 
 Il race detector è disponibile ad oggi solo su architetture a 64-bit; se quindi utilizzate
