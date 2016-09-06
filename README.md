@@ -199,7 +199,7 @@ suo lavoro.
 
 Come risolvere il problema identificato dal race detector? Un primo approccio può essere quello di
 **introdurre un mutex** per sincronizzare tra loro gli accessi. Questo è un estratto di
-[`counter_mutex.go`](mutex/counter_mutex.go) che mostra come viene introdotto il mutex:
+[`counter_mutex.go`](mutex/counter_mutex.go) che mostra come viene introdotto:
 
 ```go
 [...]
