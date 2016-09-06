@@ -388,7 +388,7 @@ concorrenza.
 ## Conclusione
 
 Il race detector è quindi un'arma molto importante nell'arsenale di ogni programmatore,
-e i programmatori Go possono dormire sogni tranquilli sapendo di averne uno così potente
+e i programmatori Go possono dormire sonni tranquilli sapendo di averne uno così potente
 perfettamente integrato nella toolchain standard e a disposizione in ogni momento.
 
 Il race detector è disponibile ad oggi solo su architetture a 64-bit; se quindi utilizzate
