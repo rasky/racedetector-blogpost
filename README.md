@@ -12,7 +12,7 @@ automaticamente asincrono grazie alle coroutine gestite dal runtime), e di conse
 molti programmi scritti in Go tendono a beneficiare di questo supporto, eseguendo decine
 o anche **migliaia di goroutine**. Il race detector è pensato per facilitare il debugging
 di software concorrente, aiutandovi ad **identificare le race condition** che possono
-avvenire tipicamente come risultato di tipici bug quali la mancanza di un mutex.
+avvenire come risultato di tipici bug quali la mancanza di un mutex.
 
 ## La concorrenza e lo stato condiviso
 
