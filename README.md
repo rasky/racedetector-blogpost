@@ -287,7 +287,7 @@ con due diversi accessi alla memoria, e quindi in modo non atomico.
 ## Integrazione con la testsuite
 
 Testare a mano un server TCP può essere un compito alquanto tedioso, e, si sa, i programmatori sono
-tra i professionisti più pigri su questo pianeta. E' quindi sempre consigliato avere a disposizione
+tra i professionisti più pigri su questo pianeta. È quindi sempre consigliato avere a disposizione
 una testsuite automatizzata, e Go ci aiuta fornendoci delle librerie e un comodo supporto integrato
 nella toolchain. Vediamo come scrivere un semplice test del nostro server: questo è il contenuto
 di [`counter_test.go`](counter_test.go).
