@@ -166,11 +166,11 @@ Goroutine 7 (finished) created at:
 ==================
 ```
 
-Come vedete il race detector ha individuato una data race: si è accorto cioè che due
+Come vedete il race detector ha individuato una data race. Si è accorto che due
 goroutine hanno effettuato **una scrittura e una lettura alla stessa locazione di memoria**
 (in questo caso: `0x00c420086190`) senza che ci fosse tra loro una sincronizzazione
-esplicita, e ci mostra lo stack-trace di ciascuna lettura/scrittura, ci dà l'ID di
-ciascuna goroutine, e ci dà anche lo stack-trace di creazione di ciasuna goroutine.
+esplicita; ci mostra lo stack-trace di ciascuna lettura/scrittura, l'ID
+e lo stack-trace di creazione di ciasuna goroutine.
 
 In questo caso, parafrasando quanto scritto sopra, si può dire che:
 
