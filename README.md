@@ -39,7 +39,7 @@ da un linguaggio con un potente e veloce supporto alla concorrenza come Go. In G
 è così **facile ed efficiente scrivere codice concorrente**, che è normale abusarne molto
 più che in altri linguaggi, e questo rischia di innescare una spirale negativa che
 allontana sempre di più la correttezza del codice... se non fosse che gli autori
-di Go hanno pensato di aiutare i programmatori e fornire un potentissimo race detector
+di Go hanno pensato di aiutare i programmatori fornendo un potentissimo race detector
 a pochi tasti di distanza.
 
 
