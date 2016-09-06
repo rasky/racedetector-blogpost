@@ -25,12 +25,12 @@ oppure usufruire delle istruzioni speciali di accesso atomico alla memoria dispo
 nella maggior parte dei processori.
 
 Dimenticarsi di effettuare un lock nel punto giusto è una fonte di bug tra i più
-insidiosi: il programma infatti può apparentemente funzionare normalmente durante
-lo sviluppo, o anche alle prime prove in produzione, ma poi rischia di avere
-**comportamenti imprevedibili** di difficile riproduzione, causando degli [heisenbug](https://it.wikipedia.org/wiki/Heisenbug)
-fastidiosissimi. Purtroppo, nella stragrande maggioranza dei casi, i programmatori
+insidiosi. Il programma infatti può apparentemente funzionare in modo corretto durante
+lo sviluppo o nelle prime prove in produzione; ma poi rischia di avere
+**comportamenti imprevedibili** e difficilmente riproducibili, causando degli [heisenbug](https://it.wikipedia.org/wiki/Heisenbug)
+fastidiosissimi. Purtroppo, nella stragrande maggioranza dei casi, gli sviluppatori
 non hanno strumenti a disposizione che li aiutino ad accorgersi di questi problemi, e la correttezza
-del codice è quindi affidata alla bravura e all'attenzione di chi scrive il codice
+del programma è quindi affidata alla bravura e all'attenzione di chi scrive il codice
 e di chi lo modifica. E vi posso assicurare che ho visto bug del genere nel codice
 scritto da programmatori molto, molto esperti!
 
