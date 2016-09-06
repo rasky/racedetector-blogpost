@@ -12,7 +12,7 @@ automaticamente asincrono grazie alle coroutine gestite dal runtime), e di conse
 molti programmi scritti in Go tendono a beneficiare di questo supporto, eseguendo decine
 o anche **migliaia di goroutine**. Il race detector è pensato per facilitare il debugging
 di software concorrente, aiutandovi ad **identificare le race condition** che possono
-avvenire tipicamente come risultato di tipici bug quali la mancanza di un mutex.
+avvenire come risultato di tipici bug quali la mancanza di un mutex.
 
 ## La concorrenza e lo stato condiviso
 
@@ -25,12 +25,12 @@ oppure usufruire delle istruzioni speciali di accesso atomico alla memoria dispo
 nella maggior parte dei processori.
 
 Dimenticarsi di effettuare un lock nel punto giusto è una fonte di bug tra i più
-insidiosi: il programma infatti può apparentemente funzionare normalmente durante
-lo sviluppo, o anche alle prime prove in produzione, ma poi rischia di avere
-**comportamenti imprevedibili** di difficile riproduzione, causando degli [heisenbug](https://it.wikipedia.org/wiki/Heisenbug)
-fastidiosissimi. Purtroppo, nella stragrande maggioranza dei casi, i programmatori
+insidiosi. Il programma infatti può apparentemente funzionare in modo corretto durante
+lo sviluppo o nelle prime prove in produzione; ma poi rischia di avere
+**comportamenti imprevedibili** e difficilmente riproducibili, causando degli [heisenbug](https://it.wikipedia.org/wiki/Heisenbug)
+fastidiosissimi. Purtroppo, nella stragrande maggioranza dei casi, gli sviluppatori
 non hanno strumenti a disposizione che li aiutino ad accorgersi di questi problemi, e la correttezza
-del codice è quindi affidata alla bravura e all'attenzione di chi scrive il codice
+del programma è quindi affidata alla bravura e all'attenzione di chi scrive il codice
 e di chi lo modifica. E vi posso assicurare che ho visto bug del genere nel codice
 scritto da programmatori molto, molto esperti!
 
@@ -39,7 +39,7 @@ da un linguaggio con un potente e veloce supporto alla concorrenza come Go. In G
 è così **facile ed efficiente scrivere codice concorrente**, che è normale abusarne molto
 più che in altri linguaggi, e questo rischia di innescare una spirale negativa che
 allontana sempre di più la correttezza del codice... se non fosse che gli autori
-di Go hanno pensato di aiutare i programmatori e fornire un potentissimo race detector
+di Go hanno pensato di aiutare i programmatori fornendo un potentissimo race detector
 a pochi tasti di distanza.
 
 
@@ -49,8 +49,7 @@ Prendiamo come esempio un semplice programma Go [`counter.go`](counter.go) che e
 e conta il numero di client che si collegano. Il codice che riporto è stato scritto
 in modo un po' più ricco del minimo indispensabile, perché voglio mostrare un caso
 realistico: ho implementato quindi una classe `Server` con un metodo bloccante
-`Serve`, e un metodo `handleClient` che viene chiamato per ogni client che si connette,
-in una goroutine separata.
+`Serve`, e un metodo `handleClient` che viene chiamato, in una goroutine separata, per ogni client che si connette.
 
 ```go
 // counter.go: simple race detection example
@@ -68,7 +67,7 @@ type Server struct {
 	numClients int
 }
 
-// NewServer creates a new Server that will listen on the specified proot/addr combo.
+// NewServer creates a new Server that will listen on the specified proto/addr combo.
 // See net.Dial for documentation on proto and addr.
 func NewServer(proto, addr string) (*Server, error) {
 	conn, err := net.Listen(proto, addr)
@@ -167,11 +166,11 @@ Goroutine 7 (finished) created at:
 ==================
 ```
 
-Come vedete il race detector ha individuato una data race: si è accorto cioè che due
+Come vedete il race detector ha individuato una data race. Si è accorto che due
 goroutine hanno effettuato **una scrittura e una lettura alla stessa locazione di memoria**
 (in questo caso: `0x00c420086190`) senza che ci fosse tra loro una sincronizzazione
-esplicita, e ci mostra lo stack-trace di ciascuna lettura/scrittura, ci dà l'ID di
-ciascuna goroutine, e ci dà anche lo stack-trace di creazione di ciasuna goroutine.
+esplicita; ci mostra lo stack-trace di ciascuna lettura/scrittura, l'ID
+e lo stack-trace di creazione di ciasuna goroutine.
 
 In questo caso, parafrasando quanto scritto sopra, si può dire che:
 
@@ -200,7 +199,7 @@ suo lavoro.
 
 Come risolvere il problema identificato dal race detector? Un primo approccio può essere quello di
 **introdurre un mutex** per sincronizzare tra loro gli accessi. Questo è un estratto di
-[`counter_mutex.go`](mutex/counter_mutex.go) che mostra come viene introdotto il mutex:
+[`counter_mutex.go`](mutex/counter_mutex.go) che mostra come viene introdotto:
 
 ```go
 [...]
@@ -228,15 +227,15 @@ func (srv *Server) handleClient(conn net.Conn) {
 [...]
 ```
 
-Se provate ad eseguire ora il programma tramite `go run -race counter_mutex.go` e provate
+Se eseguite ora il programma tramite `go run -race counter_mutex.go` e provate
 ad effettuare connessioni successive, vedrete che il race detector non si lamenterà più
 del problema. Per maggiori informazioni sull'uso dei mutex, potete leggere la documentazione
 di [`sync.Mutex`](https://golang.org/pkg/sync/#Mutex). Ci sono anche altre primitive di sincronizzazione
 a disposizione, come per esempio [`sync.RWMutex`](https://golang.org/pkg/sync/#RWMutex) o
 [`sync.Once`](https://golang.org/pkg/sync/#Once).
 
-Un piccolo suggerimento su questo argomento: nella scrittura del codice, è sempre bene tenere i lock
-per il minor tempo possibile, e infatti ho preferito isolare la lettura dello stato condiviso in uno statement
+Un piccolo suggerimento su questo argomento: è sempre bene tenere i lock
+per il minor tempo possibile. Infatti ho preferito isolare la lettura dello stato condiviso in uno statement
 separato, evitando di effettuare il lock intorno alla `io.WriteString`, che lo avrebbe
 mantenuto bloccato anche durante l'intero I/O di rete.
 
@@ -268,7 +267,7 @@ func (srv *Server) handleClient(conn net.Conn) {
 In questo caso, abbiamo utilizzato la funzione [`atomic.AddInt64`](https://golang.org/pkg/sync/atomic/#AddInt64)
 per effettuare un incremento atomico, mentre la lettura atomica è demandata a
 [`atomic.LoadInt64`](https://golang.org/pkg/sync/atomic/#LoadInt64). Gli accessi atomici sono un'alternativa
-interessante ai mutex perché sono molto più veloci anche perché non causano context-switch. Si tratta
+interessante ai mutex, sono molto più veloci anche perché non causano context-switch. Si tratta
 però di primitive un po' complesse da usare, per cui è meglio utilizzarle solo laddove si misurino
 effettivi problemi di performance (condizione spesso rara); per maggiori informazioni, potete leggere
 la documentazione del package [`sync/atomic`](https://golang.org/pkg/sync/atomic/).
@@ -288,7 +287,7 @@ con due diversi accessi alla memoria, e quindi in modo non atomico.
 ## Integrazione con la testsuite
 
 Testare a mano un server TCP può essere un compito alquanto tedioso, e, si sa, i programmatori sono
-tra i professionisti più pigri su questo pianeta. E' quindi sempre consigliato avere a disposizione
+tra i professionisti più pigri su questo pianeta. È quindi sempre consigliato avere a disposizione
 una testsuite automatizzata, e Go ci aiuta fornendoci delle librerie e un comodo supporto integrato
 nella toolchain. Vediamo come scrivere un semplice test del nostro server: questo è il contenuto
 di [`counter_test.go`](counter_test.go).
@@ -378,7 +377,7 @@ funzione della libreria di test per marcare un errore (come per esempio `t.Error
 l'intera testsuite viene marcata come `FAIL` perché è stata trovata una data race
 durante l'esecuzione. Anche se quindi la data race non ha causato di per sé un
 malfunzionamento tale da far fallire il test, Go ci suggerisce che ci sono comunque
-problemi importanti rilevati dalla testsuite da sistemare.
+problemi importanti da sistemare.
 
 E' buona norma utilizzare un sistema di continuous integration come [Travis CI](http://travis-ci.org) o
 [Circle CI](http://www.circleci.com) per eseguire la testsuite su ogni commit effettuato
@@ -389,15 +388,15 @@ concorrenza.
 ## Conclusione
 
 Il race detector è quindi un'arma molto importante nell'arsenale di ogni programmatore,
-e i programmatori Go possono dormire sogni tranquilli sapendo di averne uno così potente
+e i programmatori Go possono dormire sonni tranquilli sapendo di averne uno così potente
 perfettamente integrato nella toolchain standard e a disposizione in ogni momento.
 
 Il race detector è disponibile ad oggi solo su architetture a 64-bit; se quindi utilizzate
-Go per fare compilazione su sistemi embedded a 32-bit quali quelli ARM, non potrete purtroppo
+Go per fare compilazione su sistemi embedded a 32-bit, quali quelli ARM, non potrete purtroppo
 eseguire il race detector nativamente sul dispositivo target. In questo caso, consiglio
 sempre di mantenere fin dall'inizio dello sviluppo la possibilità di eseguire il programma
 (o almeno una parte significativa dello stesso) sul vostro sistema di sviluppo, in modo da
-poter beneficiare di questa e numerosi altre funzionalità senza dover ogni volta passare
+poter beneficiare di questa e numerose altre funzionalità senza dover ogni volta passare
 dall'esecuzione sul target.
 
 Se volete avere più informazioni sul race detector, potete continuare la lettura
