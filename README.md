@@ -49,8 +49,7 @@ Prendiamo come esempio un semplice programma Go [`counter.go`](counter.go) che e
 e conta il numero di client che si collegano. Il codice che riporto è stato scritto
 in modo un po' più ricco del minimo indispensabile, perché voglio mostrare un caso
 realistico: ho implementato quindi una classe `Server` con un metodo bloccante
-`Serve`, e un metodo `handleClient` che viene chiamato per ogni client che si connette,
-in una goroutine separata.
+`Serve`, e un metodo `handleClient` che viene chiamato, in una goroutine separata, per ogni client che si connette.
 
 ```go
 // counter.go: simple race detection example
