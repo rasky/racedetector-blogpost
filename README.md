@@ -234,8 +234,8 @@ di [`sync.Mutex`](https://golang.org/pkg/sync/#Mutex). Ci sono anche altre primi
 a disposizione, come per esempio [`sync.RWMutex`](https://golang.org/pkg/sync/#RWMutex) o
 [`sync.Once`](https://golang.org/pkg/sync/#Once).
 
-Un piccolo suggerimento su questo argomento: nella scrittura del codice, è sempre bene tenere i lock
-per il minor tempo possibile, e infatti ho preferito isolare la lettura dello stato condiviso in uno statement
+Un piccolo suggerimento su questo argomento: è sempre bene tenere i lock
+per il minor tempo possibile. Infatti ho preferito isolare la lettura dello stato condiviso in uno statement
 separato, evitando di effettuare il lock intorno alla `io.WriteString`, che lo avrebbe
 mantenuto bloccato anche durante l'intero I/O di rete.
 
