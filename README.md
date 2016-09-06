@@ -67,7 +67,7 @@ type Server struct {
 	numClients int
 }
 
-// NewServer creates a new Server that will listen on the specified proot/addr combo.
+// NewServer creates a new Server that will listen on the specified proto/addr combo.
 // See net.Dial for documentation on proto and addr.
 func NewServer(proto, addr string) (*Server, error) {
 	conn, err := net.Listen(proto, addr)
