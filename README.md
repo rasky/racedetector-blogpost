@@ -392,7 +392,7 @@ e i programmatori Go possono dormire sonni tranquilli sapendo di averne uno cos�
 perfettamente integrato nella toolchain standard e a disposizione in ogni momento.
 
 Il race detector è disponibile ad oggi solo su architetture a 64-bit; se quindi utilizzate
-Go per fare compilazione su sistemi embedded a 32-bit quali quelli ARM, non potrete purtroppo
+Go per fare compilazione su sistemi embedded a 32-bit, quali quelli ARM, non potrete purtroppo
 eseguire il race detector nativamente sul dispositivo target. In questo caso, consiglio
 sempre di mantenere fin dall'inizio dello sviluppo la possibilità di eseguire il programma
 (o almeno una parte significativa dello stesso) sul vostro sistema di sviluppo, in modo da
