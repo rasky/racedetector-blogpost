@@ -194,102 +194,15 @@ che il problema si verifichi mentre il race detector è attivo: è sufficiente e
 codice da testare in una condizione semi-realistica e il race detector farà comunque il
 suo lavoro.
 
+## Controllo data race tramite testsuite
 
-## Come risolvere una data race
-
-Come risolvere il problema identificato dal race detector? Un primo approccio può essere quello di
-**introdurre un mutex** per sincronizzare tra loro gli accessi. Questo è un estratto di
-[`counter_mutex.go`](mutex/counter_mutex.go) che mostra come viene introdotto:
-
-```go
-[...]
-
-type Server struct {
-	conn          net.Listener
-	numClientLock sync.Mutex
-	numClients    int
-}
-
-[...]
-
-		srv.numClientLock.Lock()
-		srv.numClients += 1
-		srv.numClientLock.Unlock()
-
-[...]
-
-func (srv *Server) handleClient(conn net.Conn) {
-	srv.numClientLock.Lock()
-	nc := srv.numClients
-	srv.numClientLock.Unlock()
-	io.WriteString(conn, fmt.Sprintf("Ciao, sei il client #%d che si connette a me\n", nc))
-
-[...]
-```
-
-Se eseguite ora il programma tramite `go run -race counter_mutex.go` e provate
-ad effettuare connessioni successive, vedrete che il race detector non si lamenterà più
-del problema. Per maggiori informazioni sull'uso dei mutex, potete leggere la documentazione
-di [`sync.Mutex`](https://golang.org/pkg/sync/#Mutex). Ci sono anche altre primitive di sincronizzazione
-a disposizione, come per esempio [`sync.RWMutex`](https://golang.org/pkg/sync/#RWMutex) o
-[`sync.Once`](https://golang.org/pkg/sync/#Once).
-
-Un piccolo suggerimento su questo argomento: è sempre bene tenere i lock
-per il minor tempo possibile. Infatti ho preferito isolare la lettura dello stato condiviso in uno statement
-separato, evitando di effettuare il lock intorno alla `io.WriteString`, che lo avrebbe
-mantenuto bloccato anche durante l'intero I/O di rete.
-
-Un altro approccio possibile in questo specifico caso, trattandosi di una concorrenza su una semplice
-variabile di tipo integer, è quello di utilizzare le istruzioni atomiche del processore. Questo l'estratto
-di [`counter_atomic.go`](atomic/counter_atomic.go) che mostra come fare:
-
-```go
-[...]
-
-type Server struct {
-	conn       net.Listener
-	numClients int64
-}
-
-[...]
-
-		atomic.AddInt64(&srv.numClients, 1)
-
-[...]
-
-func (srv *Server) handleClient(conn net.Conn) {
-	nc := atomic.LoadInt64(&srv.numClients)
-	io.WriteString(conn, fmt.Sprintf("Ciao, sei il client #%d che si connette a me\n", nc))
-
-[...]
-```
-
-In questo caso, abbiamo utilizzato la funzione [`atomic.AddInt64`](https://golang.org/pkg/sync/atomic/#AddInt64)
-per effettuare un incremento atomico, mentre la lettura atomica è demandata a
-[`atomic.LoadInt64`](https://golang.org/pkg/sync/atomic/#LoadInt64). Gli accessi atomici sono un'alternativa
-interessante ai mutex, sono molto più veloci anche perché non causano context-switch. Si tratta
-però di primitive un po' complesse da usare, per cui è meglio utilizzarle solo laddove si misurino
-effettivi problemi di performance (condizione spesso rara); per maggiori informazioni, potete leggere
-la documentazione del package [`sync/atomic`](https://golang.org/pkg/sync/atomic/).
-
-Interessante anche notare la potenza del race detector in questo caso: se proviamo a lasciare la
-`atomic.AddInt64` ma togliere la `atomic.LoadInt64`, viene comunque segnalata una data race. Questo
-può sembrare ovvio inizialmente, ma in realtà **non lo è affatto**: infatti, su x86-64, mentre la
-`atomic.AddInt64` è implementata tramite una istruzione assembly speciale (`LOCK XADDQ`), la
-`atomic.LoadInt64` non è altro che un normale accesso alla memoria, perché l'architettura x86-64
-garantisce che le lettura a 64-bit dalla memoria siano già atomiche. Di conseguenza, il race
-detector non solo ci sta segnalando una potenziale data race, ma addirittura una data race
-che si può verificare **solo su architetture diverse da quella in cui viene eseguito**, come
-per esempio ARM32, in cui la lettura di una variabile a 64-bit deve necessariamente avvenire
-con due diversi accessi alla memoria, e quindi in modo non atomico.
-
-
-## Integrazione con la testsuite
-
-Testare a mano un server TCP può essere un compito alquanto tedioso, e, si sa, i programmatori sono
+Testare manualmente un server TCP può essere un compito alquanto tedioso, e, si sa, i programmatori sono
 tra i professionisti più pigri su questo pianeta. È quindi sempre consigliato avere a disposizione
 una testsuite automatizzata, e Go ci aiuta fornendoci delle librerie e un comodo supporto integrato
-nella toolchain. Vediamo come scrivere un semplice test del nostro server: questo è il contenuto
+nella toolchain. 
+
+Con l'obiettivo quindi di poter con più comodità debuggare e risolvere la data race,
+vediamo come scrivere un semplice test del nostro server: questo è il contenuto
 di [`counter_test.go`](counter_test.go).
 
 ```go
@@ -384,6 +297,95 @@ E' buona norma utilizzare un sistema di continuous integration come [Travis CI](
 dal team. In questo caso, per i software Go, conviene che il CI esegua sempre la testsuite
 tramite `go test -race`, in modo da accorgersi quanto prima possibile di problemi di
 concorrenza.
+
+
+## Come risolvere una data race
+
+Come risolvere il problema identificato dal race detector? Un primo approccio può essere quello di
+**introdurre un mutex** per sincronizzare tra loro gli accessi. Questo è un estratto di
+[`counter_mutex.go`](mutex/counter_mutex.go) che mostra come viene introdotto:
+
+```go
+[...]
+
+type Server struct {
+	conn          net.Listener
+	numClientLock sync.Mutex
+	numClients    int
+}
+
+[...]
+
+		srv.numClientLock.Lock()
+		srv.numClients += 1
+		srv.numClientLock.Unlock()
+
+[...]
+
+func (srv *Server) handleClient(conn net.Conn) {
+	srv.numClientLock.Lock()
+	nc := srv.numClients
+	srv.numClientLock.Unlock()
+	io.WriteString(conn, fmt.Sprintf("Ciao, sei il client #%d che si connette a me\n", nc))
+
+[...]
+```
+
+Se eseguite ora il programma tramite `go run -race counter_mutex.go` e provate
+ad effettuare connessioni successive, vedrete che il race detector non si lamenterà più
+del problema. Per maggiori informazioni sull'uso dei mutex, potete leggere la documentazione
+di [`sync.Mutex`](https://golang.org/pkg/sync/#Mutex). Ci sono anche altre primitive di sincronizzazione
+a disposizione, come per esempio [`sync.RWMutex`](https://golang.org/pkg/sync/#RWMutex) o
+[`sync.Once`](https://golang.org/pkg/sync/#Once).
+
+Un piccolo suggerimento su questo argomento: è sempre bene tenere i lock
+per il minor tempo possibile. Infatti ho preferito isolare la lettura dello stato condiviso in uno statement
+separato, evitando di effettuare il lock intorno alla `io.WriteString`, che lo avrebbe
+mantenuto bloccato anche durante l'intero I/O di rete.
+
+Un altro approccio possibile in questo specifico caso, trattandosi di una concorrenza su una semplice
+variabile di tipo integer, è quello di utilizzare le istruzioni atomiche del processore. Questo l'estratto
+di [`counter_atomic.go`](atomic/counter_atomic.go) che mostra come fare:
+
+```go
+[...]
+
+type Server struct {
+	conn       net.Listener
+	numClients int64
+}
+
+[...]
+
+		atomic.AddInt64(&srv.numClients, 1)
+
+[...]
+
+func (srv *Server) handleClient(conn net.Conn) {
+	nc := atomic.LoadInt64(&srv.numClients)
+	io.WriteString(conn, fmt.Sprintf("Ciao, sei il client #%d che si connette a me\n", nc))
+
+[...]
+```
+
+In questo caso, abbiamo utilizzato la funzione [`atomic.AddInt64`](https://golang.org/pkg/sync/atomic/#AddInt64)
+per effettuare un incremento atomico, mentre la lettura atomica è demandata a
+[`atomic.LoadInt64`](https://golang.org/pkg/sync/atomic/#LoadInt64). Gli accessi atomici sono un'alternativa
+interessante ai mutex, sono molto più veloci anche perché non causano context-switch. Si tratta
+però di primitive un po' complesse da usare, per cui è meglio utilizzarle solo laddove si misurino
+effettivi problemi di performance (condizione spesso rara); per maggiori informazioni, potete leggere
+la documentazione del package [`sync/atomic`](https://golang.org/pkg/sync/atomic/).
+
+Interessante anche notare la potenza del race detector in questo caso: se proviamo a lasciare la
+`atomic.AddInt64` ma togliere la `atomic.LoadInt64`, viene comunque segnalata una data race. Questo
+può sembrare ovvio inizialmente, ma in realtà **non lo è affatto**: infatti, su x86-64, mentre la
+`atomic.AddInt64` è implementata tramite una istruzione assembly speciale (`LOCK XADDQ`), la
+`atomic.LoadInt64` non è altro che un normale accesso alla memoria, perché l'architettura x86-64
+garantisce che le lettura a 64-bit dalla memoria siano già atomiche. Di conseguenza, il race
+detector non solo ci sta segnalando una potenziale data race, ma addirittura una data race
+che si può verificare **solo su architetture diverse da quella in cui viene eseguito**, come
+per esempio ARM32, in cui la lettura di una variabile a 64-bit deve necessariamente avvenire
+con due diversi accessi alla memoria, e quindi in modo non atomico.
 
 ## Conclusione
 
