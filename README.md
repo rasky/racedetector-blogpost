@@ -396,7 +396,7 @@ Go per fare compilazione su sistemi embedded a 32-bit, quali quelli ARM, non pot
 eseguire il race detector nativamente sul dispositivo target. In questo caso, consiglio
 sempre di mantenere fin dall'inizio dello sviluppo la possibilità di eseguire il programma
 (o almeno una parte significativa dello stesso) sul vostro sistema di sviluppo, in modo da
-poter beneficiare di questa e numerosi altre funzionalità senza dover ogni volta passare
+poter beneficiare di questa e numerose altre funzionalità senza dover ogni volta passare
 dall'esecuzione sul target.
 
 Se volete avere più informazioni sul race detector, potete continuare la lettura
