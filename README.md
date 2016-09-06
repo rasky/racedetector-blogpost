@@ -227,7 +227,7 @@ func (srv *Server) handleClient(conn net.Conn) {
 [...]
 ```
 
-Se provate ad eseguire ora il programma tramite `go run -race counter_mutex.go` e provate
+Se eseguite ora il programma tramite `go run -race counter_mutex.go` e provate
 ad effettuare connessioni successive, vedrete che il race detector non si lamenterà più
 del problema. Per maggiori informazioni sull'uso dei mutex, potete leggere la documentazione
 di [`sync.Mutex`](https://golang.org/pkg/sync/#Mutex). Ci sono anche altre primitive di sincronizzazione
