@@ -267,7 +267,7 @@ func (srv *Server) handleClient(conn net.Conn) {
 In questo caso, abbiamo utilizzato la funzione [`atomic.AddInt64`](https://golang.org/pkg/sync/atomic/#AddInt64)
 per effettuare un incremento atomico, mentre la lettura atomica è demandata a
 [`atomic.LoadInt64`](https://golang.org/pkg/sync/atomic/#LoadInt64). Gli accessi atomici sono un'alternativa
-interessante ai mutex perché sono molto più veloci anche perché non causano context-switch. Si tratta
+interessante ai mutex, sono molto più veloci anche perché non causano context-switch. Si tratta
 però di primitive un po' complesse da usare, per cui è meglio utilizzarle solo laddove si misurino
 effettivi problemi di performance (condizione spesso rara); per maggiori informazioni, potete leggere
 la documentazione del package [`sync/atomic`](https://golang.org/pkg/sync/atomic/).
