@@ -377,7 +377,7 @@ funzione della libreria di test per marcare un errore (come per esempio `t.Error
 l'intera testsuite viene marcata come `FAIL` perché è stata trovata una data race
 durante l'esecuzione. Anche se quindi la data race non ha causato di per sé un
 malfunzionamento tale da far fallire il test, Go ci suggerisce che ci sono comunque
-problemi importanti rilevati dalla testsuite da sistemare.
+problemi importanti da sistemare.
 
 E' buona norma utilizzare un sistema di continuous integration come [Travis CI](http://travis-ci.org) o
 [Circle CI](http://www.circleci.com) per eseguire la testsuite su ogni commit effettuato
